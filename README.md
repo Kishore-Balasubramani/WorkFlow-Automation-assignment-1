@@ -1,46 +1,100 @@
-# WorkFlow Automation Assignment 1
+# Workflow Automation Assignment 2
 
-## Overview
+## BPMN Process Modeling
 
-This repository contains BPMN 2.0 models for three business process scenarios created using **Camunda Modeler**. Each model follows the required BPMN elements and represents the complete process flow with appropriate tasks, decision points, alternative paths, and end events.
+This repository contains BPMN 2.0 process models for three business process scenarios created using **Camunda Modeler**.
 
 ## Scenarios
 
-### 1. Employee Leave Approval
+### Scenario 1: Hotel Room Reservation
 
-This process models how an employee's leave request is handled through the company's HR system. The system checks the employee's leave balance before sending the request to the manager. Based on the available balance and the manager's decision, the process follows the appropriate approval, rejection, or insufficient-balance path and sends the corresponding notification.
+This BPMN model represents the process of booking a hotel room through an online reservation system.
 
-### 2. Online Purchase Order Processing
+**Process Flow:**
+1. Guest submits a room booking request with check-in and check-out dates.
+2. The reservation system checks room availability.
+3. If rooms are unavailable, the guest is notified and the process ends.
+4. If rooms are available, the system requests advance/deposit payment.
+5. If payment is successful, the booking is confirmed and a booking reference number is generated.
+6. If payment fails, the guest is notified about the payment failure and the process ends.
+7. The system sends a booking confirmation email with reservation details.
+8. The process ends.
 
-This process models the handling of an online customer order. The system first checks product availability and then processes payment if the product is available. Depending on product availability and payment status, the process either ends with a notification or continues through order confirmation, product preparation, shipping, and shipping confirmation.
+**BPMN Elements Used:**
+- Start Event
+- User/Service Tasks
+- Exclusive Gateways
+- Multiple Sequence Flows
+- End Events
 
-### 3. IT Service Request
+### Scenario 2: Loan Application Processing
 
-This process models how an employee's IT support request is handled. The help desk registers the request and determines its severity. Low-severity issues are assigned to a support technician, while high-severity issues are assigned to a senior technician. After investigation, the issue is either resolved internally or escalated to an external service provider. Once resolved, the request status is updated and the employee receives a resolution notification.
+This BPMN model represents the process of handling a personal loan application submitted to a bank.
 
-## BPMN Elements Used
+**Process Flow:**
+1. Customer submits a loan application.
+2. The bank verifies the applicant's documents and credit score.
+3. If documents are incomplete or invalid, the application is rejected and the customer is notified.
+4. If documents are valid, the system checks eligibility based on credit score and income.
+5. If the applicant is not eligible, the loan officer sends a rejection notification.
+6. If eligible, the application is forwarded to the loan officer for final approval.
+7. If approved, the system disburses the loan amount and sends an approval notification.
+8. If rejected by the loan officer, the system sends a rejection notification.
+9. The process ends after the appropriate notification.
 
-The models use the required basic BPMN building blocks, including:
+**BPMN Elements Used:**
+- Start Event
+- Multiple Tasks
+- Exclusive Gateways
+- Alternative Paths
+- End Events
 
-* Start Events
-* Tasks
-* User Tasks
-* Send Tasks
-* Exclusive Gateways
-* Sequence Flows
-* End Events
+### Scenario 3: Job Applicant Recruitment Process
 
-## Repository Files
+This BPMN model represents the recruitment process followed after a candidate submits a job application.
 
-* `scenario1_employee_leave_approval.bpmn`
-* `scenario2_online_purchase_order.bpmn`
-* `scenario3_it_service_request.bpmn`
-* `README.md`
+**Process Flow:**
+1. Candidate submits a job application online.
+2. The HR system screens the application against minimum eligibility criteria.
+3. If the candidate is not eligible, a rejection notification is sent and the process ends.
+4. If eligible, HR schedules a technical interview.
+5. The technical panel evaluates the candidate's performance.
+6. If the candidate fails the technical interview, HR sends a rejection notification.
+7. If the candidate passes, an HR/managerial round is scheduled.
+8. If the candidate is rejected in the HR round, a rejection notification is sent.
+9. If selected, the system generates and sends an offer letter.
+10. The process ends after the offer letter is sent.
 
-## Verification
+**BPMN Elements Used:**
+- Start Event
+- Tasks
+- Exclusive Gateways
+- Alternative Paths
+- End Events
 
-All BPMN models were created and organized for evaluation using Camunda Modeler. Before submission, the diagrams should be checked to ensure that all elements are connected correctly, gateway paths are clearly labeled, and the processes are readable and logically complete.
+## Repository Structure
 
-## Author
+```text
+Workflow-Automation-assignment-2/
+│
+├── README.md
+│
+├── scenario1_hotel_room_reservation.bpmn
+├── scenario1_hotel_room_reservation.png
+│
+├── scenario2_loan_application_processing.bpmn
+├── scenario2_loan_application_processing.png
+│
+├── scenario3_job_applicant_recruitment.bpmn
+└── scenario3_job_applicant_recruitment.png
+```
 
-**Kishore B.**
+## Tools Used
+
+- **Camunda Modeler**
+- **BPMN 2.0**
+- **GitHub**
+
+## Objective
+
+The objective of this assignment is to practice modeling real-world business workflows using BPMN 2.0 concepts such as events, tasks, exclusive gateways, sequence flows, and alternative process paths.
