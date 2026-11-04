@@ -1,46 +1,53 @@
-# WorkFlow Automation Assignment 1
+# Exercise 8 – Hospital Appointment Booking
 
-## Overview
+## Files
+| File | What it is |
+| --- | --- |
+| `send-notification.bpmn` | Child process: start → REST connector "Send Telegram message" → end. Reads `recipientId`, `messageText`. |
+| `slot_decision.dmn` | Decision `slot_decision`, hit policy UNIQUE. Inputs `department`, `bookedCount`; outputs `slotStatus`, `suggestedAction`. |
+| `hospital-booking.bpmn` | Parent process, **propagation OFF** (only mapped variables go in and out). |
+| `hospital-booking-propagate-all.bpmn` | Same parent, **propagation ON** (all variables copied both ways). Same process ID, so deploying it creates a new version. |
+| `Exercise8-Hospital-Booking.postman_collection.json` | The three test cases plus the cancellation message. |
 
-This repository contains BPMN 2.0 models for three business process scenarios created using **Camunda Modeler**. Each model follows the required BPMN elements and represents the complete process flow with appropriate tasks, decision points, alternative paths, and end events.
+## Setup
+1. Create a Telegram bot with @BotFather and copy the token. Send any message to your bot, then open
+   `https://api.telegram.org/bot<TOKEN>/getUpdates` and copy `message.chat.id`. That is your `telegramChatId`.
+2. Add the secret `TELEGRAM_BOT_TOKEN`:
+   - SaaS: Console → your cluster → Connector secrets.
+   - C8 Run: set it as an environment variable before starting C8 Run.
+3. Deploy `slot_decision.dmn`, `send-notification.bpmn` and `hospital-booking-propagate-all.bpmn`
+   (or `hospital-booking.bpmn`) from Camunda Modeler.
+4. Import the Postman collection and set the `telegramChatId` collection variable.
+   For SaaS, change `baseUrl` to your cluster's REST address and add OAuth.
 
-## Scenarios
+## DMN rules (UNIQUE: exactly one rule matches)
+| department | bookedCount | slotStatus |
+| --- | --- | --- |
+| Cardiology | < 10 / >= 10 | AVAILABLE / FULL |
+| Orthopedics | < 8 / >= 8 | AVAILABLE / FULL |
+| Neurology | < 6 / >= 6 | AVAILABLE / FULL |
+| General Medicine | < 15 / >= 15 | AVAILABLE / FULL |
+| any other department | < 20 / >= 20 | AVAILABLE / FULL |
 
-### 1. Employee Leave Approval
+The decision result has two outputs, so it is stored as a context in `slotResult`.
+The gateway checks `slotResult.slotStatus`.
 
-This process models how an employee's leave request is handled through the company's HR system. The system checks the employee's leave balance before sending the request to the manager. Based on the available balance and the manager's decision, the process follows the appropriate approval, rejection, or insufficient-balance path and sends the corresponding notification.
+## Test cases
+1. **Case 1 (P1001, bookedCount 3):** Check slot → AVAILABLE → Book slot → Send confirmation (child instance) → waits at
+   the 10-minute "Appointment time reached" timer, then completes.
+2. **Case 2 (P1002, bookedCount 12):** Check slot → FULL → Send slot-full message (child instance) → Booking not possible.
+3. **Case 3 (P1003):** send 3a, then send 3b within 10 minutes. The message is correlated on `patientId`.
+   The interrupting event subprocess "Handle cancellation" cancels the timer, runs Release slot, then calls
+   send-notification with the cancellation text.
 
-### 2. Online Purchase Order Processing
+The timer exists so that the instance is still alive after a successful booking. Without it the instance would end
+right after the confirmation, and the cancellation message would have nothing to correlate to.
 
-This process models the handling of an online customer order. The system first checks product availability and then processes payment if the product is available. Depending on product availability and payment status, the process either ends with a notification or continues through order confirmation, product preparation, shipping, and shipping confirmation.
+## Propagation comparison (what to show in Operate)
+| | `hospital-booking-propagate-all.bpmn` | `hospital-booking.bpmn` |
+| --- | --- | --- |
+| Parent → child | Every parent variable (patientName, department, bookedCount, slotResult, booking, …) plus `recipientId` and `messageText` | Only `recipientId` and `messageText` |
+| Child → parent | Everything the child creates (`telegramResponse`, `recipientId`, `messageText`) lands in the parent | Only the output mapping: `<callActivityId>_status` (HTTP status of the Telegram call) |
+| Trade-off | Easy to set up, but the child sees data it does not need, and child variables can overwrite parent variables | Clean contract between parent and child; this is the reusable-subprocess style |
 
-### 3. IT Service Request
-
-This process models how an employee's IT support request is handled. The help desk registers the request and determines its severity. Low-severity issues are assigned to a support technician, while high-severity issues are assigned to a senior technician. After investigation, the issue is either resolved internally or escalated to an external service provider. Once resolved, the request status is updated and the employee receives a resolution notification.
-
-## BPMN Elements Used
-
-The models use the required basic BPMN building blocks, including:
-
-* Start Events
-* Tasks
-* User Tasks
-* Send Tasks
-* Exclusive Gateways
-* Sequence Flows
-* End Events
-
-## Repository Files
-
-* `scenario1_employee_leave_approval.bpmn`
-* `scenario2_online_purchase_order.bpmn`
-* `scenario3_it_service_request.bpmn`
-* `README.md`
-
-## Verification
-
-All BPMN models were created and organized for evaluation using Camunda Modeler. Before submission, the diagrams should be checked to ensure that all elements are connected correctly, gateway paths are clearly labeled, and the processes are readable and logically complete.
-
-## Author
-
-**Kishore B.**
+Open the child instance from each call activity in Operate, compare the Variables panels, and screenshot both.
